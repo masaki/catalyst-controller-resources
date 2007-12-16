@@ -64,19 +64,21 @@ sub new {
 sub create_action {
     my ($self, %attrs) = @_;
 
-    for my $attr (qw( Collection Member )) {
-        next unless exists $attrs{attributes}->{$attr};
+    for my $resource (qw( Collection Member )) {
+        my $attrs = $attrs{attributes};
+        my $extra = "BelongsTo${resource}";
+        next unless exists $attrs->{$resource} or exists $attrs->{$extra};
 
-        $attrs{attributes}->{Chained}  = [lc $attr];
-        $attrs{attributes}->{PathPart} = [''];
-        $attrs{attributes}->{Args}     = [0];
+        $attrs->{Chained}  = [lc $resource];
+        $attrs->{Args}     = [0];
+        $attrs->{PathPart} = [$attrs->{$extra} ? () : ('')];
 
-        my $method = delete $attrs{attributes}->{$attr};
-        $method = $method->[0] || 'GET';
+        my $method = (delete $attrs->{$resource} || delete $attrs->{$extra} || [''])->[0];
         if ($method =~ /^(?:GET|POST|PUT|DELETE)$/) {
-            $attrs{attributes}->{Method} = [ $method ];
+            $attrs->{Method} = [$method];
         }
 
+        $attrs{attributes} = $attrs;
         last;
     }
 
@@ -89,9 +91,11 @@ sub setup_resources {
 
     no strict 'refs';
     no warnings 'redefine';
+
+    # belongs_to other resource controller
     if ($self->{belongs_to}) {
         *{"${class}::collection"} = sub :BelongsTo PathPrefix CaptureArgs(0) {};
-        *{"${class}::member"} = sub :BelongsTo PathPrefix CaptureArgs(1) {
+        *{"${class}::member"}     = sub :BelongsTo PathPrefix CaptureArgs(1) {
             my ($self, $c, $id) = @_;
             my $prefix = $self->path_prefix_underscore;
             $c->stash->{"${prefix}_id"} = $id;
@@ -99,7 +103,7 @@ sub setup_resources {
     }
     else {
         *{"${class}::collection"} = sub :Chained('/') PathPrefix CaptureArgs(0) {};
-        *{"${class}::member"} = sub :Chained('/') PathPrefix CaptureArgs(1) {
+        *{"${class}::member"}     = sub :Chained('/') PathPrefix CaptureArgs(1) {
             my ($self, $c, $id) = @_;
             my $prefix = $self->path_prefix_underscore;
             $c->stash->{"${prefix}_id"} = $id;
@@ -132,8 +136,18 @@ sub setup_resource_actions {
 }
 
 sub setup_extra_actions {
-    my $self = shift;
-    # not implemented yet
+    my $self  = shift;
+    my $class = ref $self || $self;
+
+    for my $resource (qw( Collection Member )) {
+        next unless my $map = delete $self->{lc $resource};
+        $map = { $map => 'GET' } unless ref $map eq 'HASH';
+
+        while (my ($action, $method) = each %$map) {
+            next unless my $code = $self->can($action);
+            attributes->import($class, $code, "BelongsTo${resource}($method)");
+        }
+    }
 }
 
 1;
