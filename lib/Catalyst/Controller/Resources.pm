@@ -7,6 +7,8 @@ use attributes ();
 use String::CamelCase ();
 use Class::C3;
 use Catalyst::Action;
+use Catalyst::ActionChain;
+#use Catalyst::DispatchType::Chained;
 
 our $VERSION = '0.01';
 
@@ -31,6 +33,32 @@ our $VERSION = '0.01';
     };
 }
 
+{
+    package Catalyst::ActionChain;
+    no warnings 'redefine';
+
+    *dispatch = sub {
+        my ($self, $c) = @_;
+        my @captures = @{ $c->req->captures || [] };
+        my @chain = @{ $self->chain };
+        my $last = pop @chain;
+        for my $action (@chain) {
+            my @args;
+            if (my $cap = $action->attributes->{CaptureArgs}) {
+                @args = splice(@captures, 0, $cap->[0]);
+            }
+            local $c->req->{arguments} = \@args;
+            $action->dispatch($c);
+        }
+
+        # for resource arguments
+        local $c->req->{arguments} = $c->req->captures || []
+            if exists $last->attributes->{Collection}
+            or exists $last->attributes->{Member};
+        $last->dispatch($c);
+    };
+}
+
 sub _parse_PathPrefix_attr {
     my ($self, $c) = @_;
     return PathPart => $self->path_prefix;
@@ -46,12 +74,15 @@ sub _parse_BelongsTo_attr {
     return Chained => "/$prefix/member";
 }
 
-sub path_prefix_underscore {
-    my $self = shift;
-    my $prefix = $self->path_prefix;
-    $prefix =~ s!/!_!g;
-    $prefix;
-}
+our %ResourceMap = (
+    list   => { resource => 'Collection', method => 'GET',    path => '' },
+    create => { resource => 'Collection', method => 'POST',   path => '' },
+    show   => { resource => 'Member',     method => 'GET',    path => '' },
+    update => { resource => 'Member',     method => 'PUT',    path => '' },
+    delete => { resource => 'Member',     method => 'DELETE', path => '' },
+    post   => { resource => 'Collection', method => 'GET',    path => 'new' },
+    edit   => { resource => 'Member',     method => 'GET',    path => 'edit' },
+);
 
 sub new {
     my $self = shift->next::method(@_);
@@ -59,30 +90,6 @@ sub new {
     $self->setup_resource_actions;
     $self->setup_extra_actions;
     $self;
-}
-
-sub create_action {
-    my ($self, %attrs) = @_;
-
-    for my $resource (qw( Collection Member )) {
-        my $attrs = $attrs{attributes};
-        my $extra = "BelongsTo${resource}";
-        next unless exists $attrs->{$resource} or exists $attrs->{$extra};
-
-        $attrs->{Chained}  = [lc $resource];
-        $attrs->{Args}     = [0];
-        $attrs->{PathPart} = [$attrs->{$extra} ? () : ('')];
-
-        my $method = (delete $attrs->{$resource} || delete $attrs->{$extra} || [''])->[0];
-        if ($method =~ /^(?:GET|POST|PUT|DELETE)$/) {
-            $attrs->{Method} = [$method];
-        }
-
-        $attrs{attributes} = $attrs;
-        last;
-    }
-
-    $self->next::method(%attrs);
 }
 
 sub setup_resources {
@@ -95,19 +102,11 @@ sub setup_resources {
     # belongs_to other resource controller
     if ($self->{belongs_to}) {
         *{"${class}::collection"} = sub :BelongsTo PathPrefix CaptureArgs(0) {};
-        *{"${class}::member"}     = sub :BelongsTo PathPrefix CaptureArgs(1) {
-            my ($self, $c, $id) = @_;
-            my $prefix = $self->path_prefix_underscore;
-            $c->stash->{"${prefix}_id"} = $id;
-        };
+        *{"${class}::member"}     = sub :BelongsTo PathPrefix CaptureArgs(1) {};
     }
     else {
         *{"${class}::collection"} = sub :Chained('/') PathPrefix CaptureArgs(0) {};
-        *{"${class}::member"}     = sub :Chained('/') PathPrefix CaptureArgs(1) {
-            my ($self, $c, $id) = @_;
-            my $prefix = $self->path_prefix_underscore;
-            $c->stash->{"${prefix}_id"} = $id;
-        };
+        *{"${class}::member"}     = sub :Chained('/') PathPrefix CaptureArgs(1) {};
     }
 }
 
@@ -115,23 +114,12 @@ sub setup_resource_actions {
     my $self  = shift;
     my $class = ref $self || $self;
 
-    # Collection
-    if (my $code = $class->can('list')) {
-        attributes->import($class, $code, 'Collection(GET)');
-    }
-    if (my $code = $class->can('create')) {
-        attributes->import($class, $code, 'Collection(POST)');
-    }
+    while (my ($action, $attrs) = each %ResourceMap) {
+        next unless my $code = $class->can($action);
 
-    # Member
-    if (my $code = $class->can('show')) {
-        attributes->import($class, $code, 'Member(GET)');
-    }
-    if (my $code = $class->can('update')) {
-        attributes->import($class, $code, 'Member(PUT)');
-    }
-    if (my $code = $class->can('delete')) {
-        attributes->import($class, $code, 'Member(DELETE)');
+        my ($resource, $method, $path) = @$attrs{qw(resource method path)};
+        my $attrs = $self->_create_attributes($resource, $method, $path);
+        attributes->import($class, $code, @$attrs);
     }
 }
 
@@ -145,9 +133,20 @@ sub setup_extra_actions {
 
         while (my ($action, $method) = each %$map) {
             next unless my $code = $self->can($action);
-            attributes->import($class, $code, "BelongsTo${resource}($method)");
+
+            my $attrs = $self->_create_attributes($resource, $method);
+            attributes->import($class, $code, @$attrs);
         }
     }
+}
+
+sub _create_attributes {
+    my ($self, $resource, $method, $path) = @_;
+
+    my $chained = lc $resource;
+    my @attrs = ("Chained($chained)", 'Args(0)', $resource, "Method($method)");
+    push @attrs => (defined($path) ? "PathPart('$path')" : 'PathPart');
+    \@attrs;
 }
 
 1;
@@ -172,8 +171,7 @@ Catalyst::Controller::Resources - resource-based controller
 
   # GET /foo/{foo_id}
   sub show {
-      my ($self, $c) = @_;
-      my $foo_id = $c->stash->{foo_id};
+      my ($self, $c, $foo_id) = @_;
       ...
   }
 
@@ -188,22 +186,24 @@ nested resource:
   package MyApp::Controller::User;
   use base 'Catalyst::Controller::Resource';
 
-  sub list   { ... } # GET /user
-  sub create { ... } # POST /user
-  sub show   { ... } # GET /user/{user_id}
-  sub update { ... } # PUT /user/{user_id}
-  sub delete { ... } # DELETE /user/{user_id}
+  ...
 
   package MyApp::Controller::Article;
   use base 'Catalyst::Controller::Resource';
 
   __PACKAGE__->config(belongs_to => 'User');
 
-  sub list   { ... } # GET /user/{user_id}/article
-  sub create { ... } # POST /user/{user_id}/article
-  sub show   { ... } # GET /user/{user_id}/article/{article_id}
-  sub update { ... } # PUT /user/{user_id}/article/{article_id}
-  sub delete { ... } # DELETE /user/{user_id}/article/{article_id}
+  # GET /user/{user_id}/article
+  sub list {
+      my ($self, $c, $user_id) = @_;
+      ...
+  }
+
+  # GET /user/{user_id}/article/{article_id}
+  sub show {
+      my ($self, $c, $user_id, $article_id) = @_;
+      ...
+  }
 
 =head1 DESCRIPTION
 
@@ -212,10 +212,6 @@ Catalyst::Controller::Resource
 =head1 METHODS
 
 =head2 new
-
-=head2 create_action
-
-=head2 path_prefix_underscore
 
 =head2 setup_resources
 
@@ -234,6 +230,6 @@ it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Catalyst::Controller>
+L<Catalyst::Controller>, L<Catalyst::Action>, L<Catalyst::ActionChain>
 
 =cut
