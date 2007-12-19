@@ -4,11 +4,9 @@ use strict;
 use warnings;
 use base 'Catalyst::Controller';
 use attributes ();
-use String::CamelCase ();
 use Class::C3;
 use Catalyst::Action;
 use Catalyst::ActionChain;
-#use Catalyst::DispatchType::Chained;
 
 our $VERSION = '0.01';
 
@@ -64,14 +62,15 @@ sub _parse_PathPrefix_attr {
     return PathPart => $self->path_prefix;
 }
 
-sub _parse_BelongsTo_attr {
+sub _parse_ChainedResource_attr {
     my ($self, $c) = @_;
 
-    my $prefix = String::CamelCase::decamelize($self->{belongs_to});
-    if (my $controller = $c->controller($self->{belongs_to})) {
-        $prefix = $controller->path_prefix;
+    my $chained = '/';
+    if (exists $self->{belongs_to}) {
+        my $controller = $c->controller($self->{belongs_to});
+        $chained .= join '/' => $controller->path_prefix, 'member';
     }
-    return Chained => "/$prefix/member";
+    return Chained => $chained;
 }
 
 our %ResourceMap = (
@@ -99,15 +98,8 @@ sub setup_resources {
     no strict 'refs';
     no warnings 'redefine';
 
-    # belongs_to other resource controller
-    if ($self->{belongs_to}) {
-        *{"${class}::collection"} = sub :BelongsTo PathPrefix CaptureArgs(0) {};
-        *{"${class}::member"}     = sub :BelongsTo PathPrefix CaptureArgs(1) {};
-    }
-    else {
-        *{"${class}::collection"} = sub :Chained('/') PathPrefix CaptureArgs(0) {};
-        *{"${class}::member"}     = sub :Chained('/') PathPrefix CaptureArgs(1) {};
-    }
+    *{"${class}::collection"} = sub :ChainedResource       PathPrefix   CaptureArgs(0) {};
+    *{"${class}::member"}     = sub :Chained('collection') PathPart('') CaptureArgs(1) {};
 }
 
 sub setup_resource_actions {
@@ -116,9 +108,8 @@ sub setup_resource_actions {
 
     while (my ($action, $attrs) = each %ResourceMap) {
         next unless my $code = $class->can($action);
-
         my ($resource, $method, $path) = @$attrs{qw(resource method path)};
-        my $attrs = $self->_create_attributes($resource, $method, $path);
+        my $attrs = $self->_create_action_attributes($resource, $method, $path);
         attributes->import($class, $code, @$attrs);
     }
 }
@@ -133,20 +124,20 @@ sub setup_extra_actions {
 
         while (my ($action, $method) = each %$map) {
             next unless my $code = $self->can($action);
-
-            my $attrs = $self->_create_attributes($resource, $method);
+            my $attrs = $self->_create_action_attributes($resource, $method);
             attributes->import($class, $code, @$attrs);
         }
     }
 }
 
-sub _create_attributes {
+sub _create_action_attributes {
     my ($self, $resource, $method, $path) = @_;
 
     my $chained = lc $resource;
-    my @attrs = ("Chained($chained)", 'Args(0)', $resource, "Method($method)");
-    push @attrs => (defined($path) ? "PathPart('$path')" : 'PathPart');
-    \@attrs;
+    my @attrs = ( "Chained($chained)", 'Args(0)', $resource, "Method($method)" );
+    push @attrs => defined($path) ? "PathPart('$path')" : 'PathPart';
+
+    return \@attrs;
 }
 
 1;
@@ -158,7 +149,7 @@ Catalyst::Controller::Resources - resource-based controller
 =head1 SYNOPSIS
 
   package MyApp::Controller::Foo;
-  use base 'Catalyst::Controller::Resource';
+  use base 'Catalyst::Controller::Resources';
 
   # GET /foo
   sub list {
@@ -184,12 +175,12 @@ Catalyst::Controller::Resources - resource-based controller
 nested resource:
 
   package MyApp::Controller::User;
-  use base 'Catalyst::Controller::Resource';
+  use base 'Catalyst::Controller::Resources';
 
   ...
 
   package MyApp::Controller::Article;
-  use base 'Catalyst::Controller::Resource';
+  use base 'Catalyst::Controller::Resources';
 
   __PACKAGE__->config(belongs_to => 'User');
 
@@ -204,10 +195,6 @@ nested resource:
       my ($self, $c, $user_id, $article_id) = @_;
       ...
   }
-
-=head1 DESCRIPTION
-
-Catalyst::Controller::Resource
 
 =head1 METHODS
 
