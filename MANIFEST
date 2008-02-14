@@ -1,4 +1,5 @@
 Changes
+inc/HTTP/Request.pm
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -17,9 +18,24 @@ inc/Test/Base/Filter.pm
 inc/Test/Builder.pm
 inc/Test/Builder/Module.pm
 inc/Test/More.pm
+lib/Catalyst/Controller/Resource.pm
 lib/Catalyst/Controller/Resources.pm
+lib/Catalyst/Controller/SingletonResource.pm
+lib/Catalyst/Helper/Controller/Resources.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
 README
 t/00_compile.t
+t/01_resources.t
+t/02_nested_resources.t
+t/03_namespace_nested_resources.t
+t/04_singleton_resource.t
+t/lib/TestApp.pm
+t/lib/TestApp/Controller/Account.pm
+t/lib/TestApp/Controller/Messages.pm
+t/lib/TestApp/Controller/Pages.pm
+t/lib/TestApp/Controller/Root.pm
+t/lib/TestApp/Controller/Users.pm
+t/lib/TestApp/Controller/Users/Articles.pm
+t/lib/TestApp/Controller/Users/Articles/Comments.pm

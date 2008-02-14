@@ -2,209 +2,187 @@ package Catalyst::Controller::Resources;
 
 use strict;
 use warnings;
-use base 'Catalyst::Controller';
-use attributes ();
-use Class::C3;
-use Catalyst::Action;
-use Catalyst::ActionChain;
+use base 'Catalyst::Controller::Resource';
+use Catalyst::Utils;
 
 our $VERSION = '0.01';
 
-{
-    package Catalyst::Action;
-    no warnings 'redefine';
+sub setup_collection_actions {
+    my $self = shift;
 
-    *match = sub {
-        my ($self, $c) = @_;
-
-        # Method('...') attribute hack
-        if (exists $self->attributes->{Method}) {
-            my $request = uc($c->req->method) eq 'HEAD' ? 'GET' : uc($c->req->method);
-            my $method  = $self->attributes->{Method}->[0] || '';
-            return unless uc($method) eq $request;
-        }
-
-        return 1 unless exists $self->attributes->{Args};
-        my $args = $self->attributes->{Args}->[0];
-        return 1 unless defined($args) && length($args);
-        return scalar( @{ $c->req->args } ) == $args;
-    };
+    my $maps = Catalyst::Utils::merge_hashes($self->{collection} || {}, {
+        list   => { method => 'GET',  path => '' },
+        create => { method => 'POST', path => '' },
+        post   => { method => 'GET',  path => 'new' },
+    });
+    $self->setup_actions(collection => $maps);
 }
 
-{
-    package Catalyst::ActionChain;
-    no warnings 'redefine';
+sub setup_member_actions {
+    my $self = shift;
 
-    *dispatch = sub {
-        my ($self, $c) = @_;
-        my @captures = @{ $c->req->captures || [] };
-        my @chain = @{ $self->chain };
-        my $last = pop @chain;
-        for my $action (@chain) {
-            my @args;
-            if (my $cap = $action->attributes->{CaptureArgs}) {
-                @args = splice(@captures, 0, $cap->[0]);
-            }
-            local $c->req->{arguments} = \@args;
-            $action->dispatch($c);
-        }
-
-        # for resource arguments
-        local $c->req->{arguments} = $c->req->captures || []
-            if exists $last->attributes->{Collection}
-            or exists $last->attributes->{Member};
-        $last->dispatch($c);
-    };
-}
-
-sub _parse_PathPrefix_attr {
-    my ($self, $c) = @_;
-    return PathPart => $self->path_prefix;
-}
-
-sub _parse_ChainedResource_attr {
-    my ($self, $c) = @_;
-
-    my $chained = '/';
-    if (exists $self->{belongs_to}) {
-        my $controller = $c->controller($self->{belongs_to});
-        $chained .= join '/' => $controller->path_prefix, 'member';
-    }
-    return Chained => $chained;
-}
-
-our %ResourceMap = (
-    list   => { resource => 'Collection', method => 'GET',    path => '' },
-    create => { resource => 'Collection', method => 'POST',   path => '' },
-    show   => { resource => 'Member',     method => 'GET',    path => '' },
-    update => { resource => 'Member',     method => 'PUT',    path => '' },
-    delete => { resource => 'Member',     method => 'DELETE', path => '' },
-    post   => { resource => 'Collection', method => 'GET',    path => 'new' },
-    edit   => { resource => 'Member',     method => 'GET',    path => 'edit' },
-);
-
-sub new {
-    my $self = shift->next::method(@_);
-    $self->setup_resources;
-    $self->setup_resource_actions;
-    $self->setup_extra_actions;
-    $self;
-}
-
-sub setup_resources {
-    my $self  = shift;
-    my $class = ref $self || $self;
-
-    no strict 'refs';
-    no warnings 'redefine';
-
-    *{"${class}::collection"} = sub :ChainedResource       PathPrefix   CaptureArgs(0) {};
-    *{"${class}::member"}     = sub :Chained('collection') PathPart('') CaptureArgs(1) {};
-}
-
-sub setup_resource_actions {
-    my $self  = shift;
-    my $class = ref $self || $self;
-
-    while (my ($action, $attrs) = each %ResourceMap) {
-        next unless my $code = $class->can($action);
-        my ($resource, $method, $path) = @$attrs{qw(resource method path)};
-        my $attrs = $self->_create_action_attributes($resource, $method, $path);
-        attributes->import($class, $code, @$attrs);
-    }
-}
-
-sub setup_extra_actions {
-    my $self  = shift;
-    my $class = ref $self || $self;
-
-    for my $resource (qw( Collection Member )) {
-        next unless my $map = delete $self->{lc $resource};
-        $map = { $map => 'GET' } unless ref $map eq 'HASH';
-
-        while (my ($action, $method) = each %$map) {
-            next unless my $code = $self->can($action);
-            my $attrs = $self->_create_action_attributes($resource, $method);
-            attributes->import($class, $code, @$attrs);
-        }
-    }
-}
-
-sub _create_action_attributes {
-    my ($self, $resource, $method, $path) = @_;
-
-    my $chained = lc $resource;
-    my @attrs = ( "Chained($chained)", 'Args(0)', $resource, "Method($method)" );
-    push @attrs => defined($path) ? "PathPart('$path')" : 'PathPart';
-
-    return \@attrs;
+    my $maps = Catalyst::Utils::merge_hashes($self->{member} || {}, {
+        show    => { method => 'GET',    path => '' },
+        update  => { method => 'PUT',    path => '' },
+        destroy => { method => 'DELETE', path => '' },
+        edit    => { method => 'GET' },
+    });
+    $self->setup_actions(member => $maps);
 }
 
 1;
 
 =head1 NAME
 
-Catalyst::Controller::Resources - resource-based controller
+Catalyst::Controller::Resources - Catalyst Collection Resources Controller
 
 =head1 SYNOPSIS
 
-  package MyApp::Controller::Foo;
-  use base 'Catalyst::Controller::Resources';
+=head2 MAP RESOURCES
 
-  # GET /foo
+  package MyApp::Controller::Articles;
+  use base 'Catalyst::Controller::Resources';
+  
+  # GET /articles
   sub list {
       my ($self, $c) = @_;
-      ...
   }
-
-  # POST /foo
-  sub create { ... }
-
-  # GET /foo/{foo_id}
+  
+  # POST /articles
+  sub create {
+      my ($self, $c) = @_;
+  }
+  
+  # GET /articles/{article_id}
   sub show {
-      my ($self, $c, $foo_id) = @_;
-      ...
+      my ($self, $c, $article_id) = @_;
+  }
+  
+  # PUT /articles/{article_id}
+  sub update {
+      my ($self, $c, $article_id) = @_;
+  }
+  
+  # DELETE /articles/{article_id}
+  sub destroy {
+      my ($self, $c, $article_id) = @_;
+  }
+  
+  # GET /articles/new
+  sub post {
+      my ($self, $c) = @_;
+  }
+  
+  # GET /articles/{article_id}/edit
+  sub edit {
+      my ($self, $c, $article_id) = @_;
   }
 
-  # PUT /foo/{foo_id}
-  sub update { ... }
+=head2 NESTED RESOURCES
 
-  # DELETE /foo/{foo_id}
-  sub delete { ... }
-
-nested resource:
-
-  package MyApp::Controller::User;
+  package MyApp::Controller::Articles;
   use base 'Catalyst::Controller::Resources';
-
-  ...
-
-  package MyApp::Controller::Article;
+  
+  # ...
+  
+  package MyApp::Controller::Comments;
   use base 'Catalyst::Controller::Resources';
-
-  __PACKAGE__->config(belongs_to => 'User');
-
-  # GET /user/{user_id}/article
+  
+  __PACKAGE__->config(belongs_to => 'Articles');
+  
+  # GET /articles/{article_id}/comments
   sub list {
-      my ($self, $c, $user_id) = @_;
-      ...
+      my ($self, $c, $article_id) = @_;
+  }
+  
+  # POST /articles/{article_id}/comments
+  sub create {
+      my ($self, $c, $article_id) = @_;
+  }
+  
+  # GET /articles/{article_id}/comments/{comment_id}
+  sub show {
+      my ($self, $c, $article_id, $comment_id) = @_;
+  }
+  
+  # PUT /articles/{article_id}/comments/{comment_id}
+  sub update {
+      my ($self, $c, $article_id, $comment_id) = @_;
+  }
+  
+  # DELETE /articles/{article_id}/comments/{comment_id}
+  sub destroy {
+      my ($self, $c, $article_id, $comment_id) = @_;
+  }
+  
+  # GET /articles/{article_id}/comments/new
+  sub post {
+      my ($self, $c, $article_id) = @_;
+  }
+  
+  # GET /articles/{article_id}/comments/{comment_id}/edit
+  sub edit {
+      my ($self, $c, $article_id, $comment_id) = @_;
   }
 
-  # GET /user/{user_id}/article/{article_id}
-  sub show {
-      my ($self, $c, $user_id, $article_id) = @_;
-      ...
-  }
+=head1 DESCRIPTION
+
+This controller defines HTTP verb-oriented actions for collection resource,
+inspired by map.resources (Ruby on Rails).
+
+In your controller:
+
+  package MyApp::Controller::Books;
+  use base 'Catalyst::Controller::Resources';
+
+This base controller exports Catalyst action attributes to your controller,
+and setup collection resource as B</books>.
 
 =head1 METHODS
 
-=head2 new
+=head2 RESERVED SUBROUTINES (ACTIONS)
 
-=head2 setup_resources
+=over
 
-=head2 setup_resource_actions
+=item list
 
-=head2 setup_extra_actions
+called by B<GET /collection> request
+
+=item create
+
+called by B<POST /collection> request
+
+=item show
+
+called by B<GET /member/{member_id}> request
+
+=item update
+
+called by B<PUT /member/{member_id}> request
+
+=item destroy
+
+called by B<DELETE /member/{member_id}> request
+
+=item post
+
+called by B<GET /collection/new> request
+
+=item edit
+
+called by B<GET /member/{member_id}/edit> request
+
+=back
+
+=head2 INTERNAL METHODS
+
+=over
+
+=item setup_collection_actions
+
+=item setup_member_actions
+
+=back
 
 =head1 AUTHOR
 
@@ -217,6 +195,7 @@ it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Catalyst::Controller>, L<Catalyst::Action>, L<Catalyst::ActionChain>
+L<Catalyst::Controller>, L<Catalyst::Controller::SingletonResource>,
+L<http://api.rubyonrails.org/classes/ActionController/Resources.html>
 
 =cut
