@@ -1,4 +1,4 @@
-package Catalyst::Helper::Controller::Resources;
+package Catalyst::Helper::Controller::SingletonResource;
 
 use strict;
 use warnings;
@@ -18,11 +18,11 @@ sub mk_comptest {
 
 =head1 NAME
 
-Catalyst::Helper::Controller::Resources - Helper for Controller::Resources
+Catalyst::Helper::Controller::SingletonResource - Helper for Controller::SingletonResource
 
 =head1 SYNOPSIS
 
-    script/create.pl controller <ControllerName> Resources [ BelongsToName ]
+    script/create.pl controller <ControllerName> SingletonResource [ BelongsToName ]
 
 =head1 METHODS
 
@@ -30,11 +30,11 @@ Catalyst::Helper::Controller::Resources - Helper for Controller::Resources
 
 =item mk_complass
 
-Makes a Resources Controller class.
+Makes a SingletonResource Controller class.
 
 =item mk_comptest
 
-Makes a Resources Controller test.
+Makes a SingletonResource Controller test.
 
 =back
 
@@ -49,7 +49,7 @@ it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Catalyst::Controller::Resources>
+L<Catalyst::Controller::SingletonResource>
 
 =begin pod_to_ignore
 
@@ -63,7 +63,7 @@ package [% class %];
 
 use strict;
 use warnings;
-use base 'Catalyst::Controller::Resources';
+use base 'Catalyst::Controller::SingletonResource';
 
 [% IF belongs_to -%]
 __PACKAGE__->config(belongs_to => '[% belongs_to %]');
@@ -71,7 +71,7 @@ __PACKAGE__->config(belongs_to => '[% belongs_to %]');
 
 =head1 NAME
 
-[% class %] - Catalyst Collection Resource Controller
+[% class %] - Catalyst Singleton Resource Controller
 
 =head1 DESCRIPTION
 
@@ -81,19 +81,9 @@ Catalyst Controller.
 
 =cut
 
-=head2 list
-
-called by GET Collection Resource
-
-=cut
-
-sub list {
-    my ($self, $c[% IF belongs_to %], $parent_id[% END %]) = @_;
-}
-
 =head2 create
 
-called by POST Collection Resource
+called by POST Singleton Resource
 
 =cut
 
@@ -103,32 +93,32 @@ sub create {
 
 =head2 show
 
-called by GET Member Resource
+called by GET Singleton Resource
 
 =cut
 
 sub show {
-    my ($self, $c[% IF belongs_to %], $parent_id[% END %], $id) = @_;
+    my ($self, $c[% IF belongs_to %], $parent_id[% END %]) = @_;
 }
 
 =head2 update
 
-called by PUT Member Resource
+called by PUT Singleton Resource
 
 =cut
 
 sub update {
-    my ($self, $c[% IF belongs_to %], $parent_id[% END %], $id) = @_;
+    my ($self, $c[% IF belongs_to %], $parent_id[% END %]) = @_;
 }
 
 =head2 destroy
 
-called by DELETE Member Resource
+called by DELETE Singleton Resource
 
 =cut
 
 sub destroy {
-    my ($self, $c[% IF belongs_to %], $parent_id[% END %], $id) = @_;
+    my ($self, $c[% IF belongs_to %], $parent_id[% END %]) = @_;
 }
 
 =head2 post
@@ -143,12 +133,12 @@ sub post {
 
 =head2 edit
 
-called by GET form for describing a Member Resource
+called by GET form for describing a Singleton Resource
 
 =cut
 
 sub edit {
-    my ($self, $c[% IF belongs_to %], $parent_id[% END %], $id) = @_;
+    my ($self, $c[% IF belongs_to %], $parent_id[% END %]) = @_;
 }
 
 =head1 AUTHOR
