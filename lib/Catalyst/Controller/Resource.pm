@@ -5,14 +5,14 @@ use warnings;
 use base 'Catalyst::Controller';
 use attributes ();
 use Class::C3 ();
-use List::Util ();
 use Catalyst::Action;
 use Catalyst::ActionChain;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 {
-    package Catalyst::Action;
+    package # hide from PAUSE
+        Catalyst::Action;
     no warnings 'redefine';
 
     *match = sub {
@@ -33,7 +33,8 @@ our $VERSION = '0.01';
 }
 
 {
-    package Catalyst::ActionChain;
+    package # hide from PAUSE
+        Catalyst::ActionChain;
     no warnings 'redefine';
 
     *dispatch = sub {

@@ -5,7 +5,7 @@ use warnings;
 use base 'Catalyst::Controller::Resource';
 use Catalyst::Utils;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub setup_collection_actions {
     my $self = shift;
