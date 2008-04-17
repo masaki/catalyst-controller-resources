@@ -73,8 +73,11 @@ sub _parse_ResourceChained_attr {
 sub _parse_ResourcePath_attr {
     my ($self, $c) = @_;
 
-    my $path = [ split m!/!, shift->path_prefix ]->[-1];
+    my $path = shift->path_prefix;
+
+    $path = [ split m!/!, $path ]->[-1] if $self->{belongs_to};
     # XXX: plural/singular
+
     return PathPart => $path;
 }
 
