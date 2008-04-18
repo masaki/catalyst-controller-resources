@@ -188,6 +188,8 @@ called by B<GET /member/{member_id}/edit> request
 
 NAKAGAWA Masaki E<lt>masaki@cpan.orgE<gt>
 
+Daisuke Murase E<lt>typester@cpan.orgE<gt>
+
 =head1 LICENSE
 
 This library is free software; you can redistribute it and/or modify
