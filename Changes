@@ -1,8 +1,8 @@
 Revision history for Perl extension Catalyst::Controller::Resources
 
 0.03    2008-04-19T21:42:04+09:00
-        - now accepts deep namespaces (eg. '/api/items') in root resources
-          (eg. 'Controller::API::Items')
+        - now accepts deep namespaces in root resources (e.g. '/api/items'
+          in 'Controller::API::Items') (thanks to Daisuke Murase)
 
 0.02    2008-02-16T02:38:08+09:00
         - remove dependency on List::Util
