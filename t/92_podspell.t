@@ -18,6 +18,7 @@ local $ENV{LANG} = 'C';
 all_pod_files_spelling_ok('lib');
 __DATA__
 NAKAGAWA Masaki
+Daisuke Murase
 Catalyst::Controller::Resources
 Catalyst::Controller::SingletonResource
 RESTful

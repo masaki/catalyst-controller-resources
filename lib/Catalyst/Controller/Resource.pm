@@ -8,7 +8,7 @@ use Class::C3 ();
 use Catalyst::Action;
 use Catalyst::ActionChain;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 {
     package # hide from PAUSE
@@ -59,7 +59,7 @@ our $VERSION = '0.02';
 }
 
 sub _parse_ResourceChained_attr {
-    my ($self, $c) = @_;
+    my ($self, $c, $name, $value) = @_;
 
     my $path = '/';
     if (exists $self->{belongs_to}) {
@@ -70,19 +70,17 @@ sub _parse_ResourceChained_attr {
     return Chained => $path;
 }
 
-sub _parse_ResourcePath_attr {
-    my ($self, $c) = @_;
-
-    my $path = shift->path_prefix;
-
-    $path = [ split m!/!, $path ]->[-1] if $self->{belongs_to};
-    # XXX: plural/singular
-
-    return PathPart => $path;
+sub _parse_PathPrefix_attr {
+    my ($self, $c, $name, $value) = @_;
+    return PathPart => $self->path_prefix;
 }
 
 sub new {
     my $self = shift->next::method(@_);
+
+    if (exists $self->{belongs_to} and not exists $self->{path}) {
+        $self->{path} = [ split m!/! => $self->path_prefix ]->[-1];
+    }
 
     $self->setup_resources;
     $self->setup_collection_actions;
@@ -123,7 +121,7 @@ sub setup_actions {
     }
 }
 
-sub _collection_attributes { qw/ResourceChained ResourcePath CaptureArgs(0)/       }
+sub _collection_attributes { qw/ResourceChained PathPrefix CaptureArgs(0)/         }
 sub _member_attributes     { qw/Chained('collection') PathPart('') CaptureArgs(1)/ }
 
 sub _construct_action_attributes {

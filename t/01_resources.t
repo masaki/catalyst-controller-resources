@@ -32,9 +32,4 @@ is( _req(GET => '/users/login')->content => 'users/login' );
 ok( _req(GET => '/users/1/feed')->is_success );
 is( _req(GET => '/users/1/feed')->content => 'users/feed' );
 
-# deep path action
-ok( _req(GET => '/foo/bar/buz')->is_success );
-is( _req(GET => '/foo/bar/buz')->content => 'foo/bar/buz/list' );
-
-
 sub _req { request(HTTP::Request->new(@_)) }
