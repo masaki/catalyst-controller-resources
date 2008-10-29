@@ -7,6 +7,7 @@ use attributes ();
 use Class::C3 ();
 use Catalyst::Action;
 use Catalyst::ActionChain;
+use List::Util qw(first);
 
 our $VERSION = '0.03';
 
@@ -109,16 +110,28 @@ sub setup_actions {
     my ($self, $map_to, $maps) = @_;
     my $class = ref $self || $self;
 
+    my @action_cache = @{ $class->_action_cache };
     while (my ($action, $map) = each %$maps) {
-        my $subname = join '::' => $class, $action;
-
-        no strict 'refs';
-        next unless defined &$subname;
-
+        next unless my $code = $class->can($action);
         $map = { method => uc $map } unless ref($map) eq 'HASH';
+
         my @attrs = $self->_construct_action_attributes($map_to, $map);
-        attributes->import($class, \&$subname, @attrs);
+        unshift @attrs => @{ attributes::get($code) || [] };
+
+        # rewrite cache
+        if (my $cache = first { $code eq $_->[0] } @action_cache) {
+            $cache->[1] = [@attrs];
+        }
+        else {
+            push @action_cache => [ $code => [@attrs] ];
+        }
+        $class->_attr_cache->{$code} = [@attrs];
+
+        attributes->import($class, $code, @attrs);
     }
+
+    # set action_cache
+    $class->_action_cache(\@action_cache);
 }
 
 sub _collection_attributes { qw/ResourceChained PathPrefix CaptureArgs(0)/         }

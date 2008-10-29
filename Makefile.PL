@@ -4,6 +4,7 @@ all_from('lib/Catalyst/Controller/Resources.pm');
 
 requires('Catalyst::Runtime' => 5.70);
 requires('Class::C3');
+requires('List::Util');
 
 feature 'Catalyst::Helper support',
     -default          => 0,
