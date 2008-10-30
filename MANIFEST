@@ -2,6 +2,7 @@ Changes
 inc/HTTP/Request.pm
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
+inc/Module/Install/AuthorTests.pm
 inc/Module/Install/AutoInstall.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
@@ -18,6 +19,7 @@ inc/Test/Base/Filter.pm
 inc/Test/Builder.pm
 inc/Test/Builder/Module.pm
 inc/Test/More.pm
+inc/Test/use/ok.pm
 lib/Catalyst/Controller/Resource.pm
 lib/Catalyst/Controller/Resources.pm
 lib/Catalyst/Controller/SingletonResource.pm
@@ -45,3 +47,6 @@ t/lib/TestApp/Controller/Users.pm
 t/lib/TestApp/Controller/Users/Articles.pm
 t/lib/TestApp/Controller/Users/Articles/Comments.pm
 t/lib/TestApp/Controller/Users/Date.pm
+xt/01_pod.t
+xt/02_podcoverage.t
+xt/03_podspell.t

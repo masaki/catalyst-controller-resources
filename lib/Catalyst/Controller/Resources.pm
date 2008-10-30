@@ -125,6 +125,46 @@ Catalyst::Controller::Resources - Catalyst Collection Resources Controller
       my ($self, $c, $article_id, $comment_id) = @_;
   }
 
+=head2 WITH OTHER CONTROLLERS AND ATTRIBUTES
+
+e.g.) L<Catalyst::Controller::RequestToken>
+
+In your controller:
+
+  package MyApp::Controller::Foo;
+  use base qw(
+      Catalyst::Controller::Resources
+      Catalyst::Controller::RequestToken
+  );
+  
+  sub post :CreateToken {
+      my ($self, $c) = @_;
+      $c->stash->{template} = 'foo/post.tt';
+      $c->forward($c->view('TT'));
+  }
+  
+  sub create :ValidateToken {
+      my ($self, $c) = @_;
+
+      if ($self->validate_token) {
+          $c->res->body('complete.');
+      }
+      else {
+          $c->res->body('invalid operation.');
+      }
+  }
+
+post.tt:
+
+  <html>
+    <body>
+      <form action="[% c.uri_for('/foo') %]" method="post">
+        <input type="hidden" name="_token" values="[% c.req.param('_token') %]"/>
+        <input type="submit" name="submit" value="complete"/>
+      </form>
+    </body>
+  </html>
+
 =head1 DESCRIPTION
 
 This controller defines HTTP verb-oriented actions for collection resource,
