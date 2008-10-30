@@ -1,5 +1,8 @@
 Revision history for Perl extension Catalyst::Controller::Resources
 
+0.04    2008-10-30T11:31:40+09:00
+        - can use with other controllers and attributes
+        
 0.03    2008-04-19T21:42:04+09:00
         - now accepts deep namespaces in root resources (e.g. '/api/items'
           in 'Controller::API::Items') (thanks to Daisuke Murase)
