@@ -8,8 +8,8 @@ our $VERSION = '0.04';
 
 BEGIN { extends 'Catalyst::Controller::Resource' }
 
-sub collection :ResourceChained ResourcePath CaptureArgs(0) {}
-sub member     :ResourceChained ResourcePath CaptureArgs(1) {}
+sub _COLLECTION :ResourceChained ResourcePath CaptureArgs(0) {}
+sub _MEMBER     :ResourceChained ResourcePath CaptureArgs(1) {}
 
 sub setup_collection_actions {
     my $self = shift;
@@ -19,7 +19,7 @@ sub setup_collection_actions {
         create => { method => 'POST', path => '' },
         post   => { method => 'GET',  path => 'new' },
     });
-    $self->setup_actions(collection => $maps);
+    $self->setup_actions(_COLLECTION => $maps);
 }
 
 sub setup_member_actions {
@@ -31,7 +31,7 @@ sub setup_member_actions {
         destroy => { method => 'DELETE', path => '' },
         edit    => { method => 'GET' },
     });
-    $self->setup_actions(member => $maps);
+    $self->setup_actions(_MEMBER => $maps);
 }
 
 __PACKAGE__->meta->make_immutable;

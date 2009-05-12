@@ -46,7 +46,7 @@ sub _parse_ResourceChained_attr {
 
     my $path = '/';
     if (my $parent = $self->{belongs_to}) {
-        $path .= $c->controller($parent)->action_namespace . '/member';
+        $path .= $c->controller($parent)->action_namespace . '/_MEMBER';
     }
 
     return Chained => $path;
