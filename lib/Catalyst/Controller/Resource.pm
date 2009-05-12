@@ -41,31 +41,6 @@ sub _construct_action_attributes {
     );
 }
 
-sub _parse_ResourceChained_attr {
-    my ($self, $c, $name, $value) = @_;
-
-    my $path = '/';
-    if (my $parent = $self->{belongs_to}) {
-        $path .= $c->controller($parent)->action_namespace . '/_MEMBER';
-    }
-
-    return Chained => $path;
-}
-
-sub _parse_ResourcePath_attr {
-    my ($self, $c, $name, $value) = @_;
-
-    my $path;
-    if (exists $self->{belongs_to} and not $self->has_path_prefix) {
-        $path = [ split m!/! => $self->action_namespace ]->[-1];
-    }
-    else {
-        $path = $self->path_prefix;
-    }
-
-    return PathPart => $path;
-}
-
 {
     require Catalyst::Action;
     package # hide from PAUSE

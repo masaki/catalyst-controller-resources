@@ -8,6 +8,8 @@ our $VERSION = '0.04';
 
 BEGIN { extends 'Catalyst::Controller::Resource' }
 
+with 'Catalyst::Controller::Resources::Role::ResourceAttributes';
+
 sub _COLLECTION :ResourceChained ResourcePath CaptureArgs(0) {}
 sub _MEMBER     :ResourceChained ResourcePath CaptureArgs(1) {}
 
