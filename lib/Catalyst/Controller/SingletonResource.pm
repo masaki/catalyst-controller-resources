@@ -5,7 +5,11 @@ use warnings;
 use base 'Catalyst::Controller::Resource';
 use Catalyst::Utils;
 
-our $VERSION = '0.03';
+require Catalyst::Controller::Resources;
+our $VERSION = $Catalyst::Controller::Resources::VERSION;
+
+sub collection :ResourceChained ResourcePath CaptureArgs(0) {}
+sub member     :ResourceChained ResourcePath CaptureArgs(0) {}
 
 sub setup_collection_actions {
     my $self = shift;
@@ -28,8 +32,6 @@ sub setup_member_actions {
     });
     $self->setup_actions(member => $maps);
 }
-
-sub _member_attributes { qw/Chained('collection') PathPart('') CaptureArgs(0)/ }
 
 1;
 

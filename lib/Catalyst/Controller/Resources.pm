@@ -7,6 +7,9 @@ use Catalyst::Utils;
 
 our $VERSION = '0.04';
 
+sub collection :ResourceChained ResourcePath CaptureArgs(0) {}
+sub member     :ResourceChained ResourcePath CaptureArgs(1) {}
+
 sub setup_collection_actions {
     my $self = shift;
 
