@@ -1,12 +1,13 @@
 package Catalyst::Controller::SingletonResource;
 
-use strict;
-use warnings;
-use base 'Catalyst::Controller::Resource';
+use Moose;
+use namespace::clean -except => ['meta'];
 use Catalyst::Utils;
 
 require Catalyst::Controller::Resources;
 our $VERSION = $Catalyst::Controller::Resources::VERSION;
+
+BEGIN { extends 'Catalyst::Controller::Resource' }
 
 sub collection :ResourceChained ResourcePath CaptureArgs(0) {}
 sub member     :ResourceChained ResourcePath CaptureArgs(0) {}
@@ -33,7 +34,7 @@ sub setup_member_actions {
     $self->setup_actions(member => $maps);
 }
 
-1;
+__PACKAGE__->meta->make_immutable;
 
 =head1 NAME
 

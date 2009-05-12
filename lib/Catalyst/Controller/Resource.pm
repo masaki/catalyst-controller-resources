@@ -1,10 +1,11 @@
 package # hide from PAUSE
     Catalyst::Controller::Resource;
 
-use strict;
-use warnings;
-use base 'Catalyst::Controller';
+use Moose;
+use namespace::clean -except => ['meta'];
 use attributes ();
+
+BEGIN { extends 'Catalyst::Controller' }
 
 sub BUILD {
     my $self = shift;
@@ -115,4 +116,4 @@ sub _parse_ResourcePath_attr {
     };
 }
 
-1;
+__PACKAGE__->meta->make_immutable;
