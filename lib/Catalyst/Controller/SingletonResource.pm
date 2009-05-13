@@ -2,39 +2,25 @@ package Catalyst::Controller::SingletonResource;
 
 use Moose;
 use namespace::clean -except => ['meta'];
-use Catalyst::Utils;
+
+BEGIN { extends 'Catalyst::Controller::Resources' }
 
 require Catalyst::Controller::Resources;
 our $VERSION = $Catalyst::Controller::Resources::VERSION;
 
-BEGIN { extends 'Catalyst::Controller::Resource' }
-
 with 'Catalyst::Controller::Resources::Role::ResourceAttributes';
+
+has '+_default_collection_actions' => (
+    default => sub {
+        +{
+            create => { method => 'POST', path => '' },
+            post   => { method => 'GET',  path => 'new' },
+        },
+    },
+);
 
 sub _COLLECTION :ResourceChained ResourcePath CaptureArgs(0) {}
 sub _MEMBER     :ResourceChained ResourcePath CaptureArgs(0) {}
-
-sub setup_collection_actions {
-    my $self = shift;
-
-    my $maps = Catalyst::Utils::merge_hashes($self->{collection} || {}, {
-        create => { method => 'POST', path => '' },
-        post   => { method => 'GET',  path => 'new' },
-    });
-    $self->setup_actions(_COLLECTION => $maps);
-}
-
-sub setup_member_actions {
-    my $self = shift;
-
-    my $maps = Catalyst::Utils::merge_hashes($self->{member} || {}, {
-        show    => { method => 'GET',    path => '' },
-        update  => { method => 'PUT',    path => '' },
-        destroy => { method => 'DELETE', path => '' },
-        edit    => { method => 'GET' },
-    });
-    $self->setup_actions(_MEMBER => $maps);
-}
 
 __PACKAGE__->meta->make_immutable;
 

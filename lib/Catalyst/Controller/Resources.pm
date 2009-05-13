@@ -4,9 +4,9 @@ use Moose;
 use namespace::clean -except => ['meta'];
 use attributes ();
 
-our $VERSION = '0.04';
-
 BEGIN { extends 'Catalyst::Controller::ActionRole' }
+
+our $VERSION = '0.04';
 
 __PACKAGE__->config(
     action_roles => ['+Catalyst::Controller::Resources::ActionRole::ResourceAction'],
