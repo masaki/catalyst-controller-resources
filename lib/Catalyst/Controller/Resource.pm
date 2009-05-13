@@ -37,39 +37,12 @@ sub _construct_action_attributes {
     my ($self, $chained_from, $map) = @_;
 
     return (
-        'Resource',
+        'ResourceEndpoint',
         'Args(0)',
         "Chained('$chained_from')",
         "Method('$map->{method}')",
         exists $map->{path} ? "PathPart('$map->{path}')" : 'PathPart',
     );
-}
-
-{
-    require Catalyst::ActionChain;
-    package # hide from PAUSE
-        Catalyst::ActionChain;
-    no warnings 'redefine';
-
-    *dispatch = sub {
-        my ($self, $c) = @_;
-        my @captures = @{ $c->req->captures || [] };
-        my @chain = @{ $self->chain };
-        my $last = pop @chain;
-        for my $action (@chain) {
-            my @args;
-            if (my $cap = $action->attributes->{CaptureArgs}) {
-                @args = splice(@captures, 0, $cap->[0]);
-            }
-            local $c->req->{arguments} = \@args;
-            $action->dispatch($c);
-        }
-
-        # for resource arguments
-        local $c->req->{arguments} = $c->req->captures || []
-            if exists $last->attributes->{Resource};
-        $last->dispatch($c);
-    };
 }
 
 __PACKAGE__->meta->make_immutable;

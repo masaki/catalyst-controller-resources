@@ -17,4 +17,13 @@ around 'match' => sub {
     $next->($self, $c);
 };
 
+before 'dispatch' => sub {
+    my ($self, $c) = @_;
+
+    # check ResourceEndpoint attribute
+    if (exists $self->attributes->{ResourceEndpoint}) {
+        $c->req->{arguments} = $c->req->captures || [];
+    }
+};
+
 1;
