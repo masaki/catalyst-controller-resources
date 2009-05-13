@@ -2,38 +2,103 @@ package Catalyst::Controller::Resources;
 
 use Moose;
 use namespace::clean -except => ['meta'];
-use Catalyst::Utils;
+use attributes ();
 
 our $VERSION = '0.04';
 
-BEGIN { extends 'Catalyst::Controller::Resource' }
+BEGIN { extends 'Catalyst::Controller::ActionRole' }
+
+__PACKAGE__->config(
+    action_roles => ['+Catalyst::Controller::Resources::ActionRole::ResourceAction'],
+);
 
 with 'Catalyst::Controller::Resources::Role::ResourceAttributes';
 
-sub _COLLECTION :ResourceChained ResourcePath CaptureArgs(0) {}
-sub _MEMBER     :ResourceChained ResourcePath CaptureArgs(1) {}
+has '_additional_collection_methods' => (
+    is        => 'ro',
+    isa       => 'HashRef',
+    init_arg  => 'collection',
+    default   => sub { +{} },
+);
 
-sub setup_collection_actions {
+has '_collection_methods' => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    init_arg   => undef,
+    lazy_build => 1,
+);
+
+sub _build__collection_methods {
     my $self = shift;
-
-    my $maps = Catalyst::Utils::merge_hashes($self->{collection} || {}, {
+    return +{
         list   => { method => 'GET',  path => '' },
         create => { method => 'POST', path => '' },
         post   => { method => 'GET',  path => 'new' },
-    });
-    $self->setup_actions(_COLLECTION => $maps);
+        %{ $self->_additional_collection_methods },
+    };
 }
 
-sub setup_member_actions {
-    my $self = shift;
+has '_additional_member_methods' => (
+    is       => 'ro',
+    isa      => 'HashRef',
+    init_arg => 'member',
+    default  => sub { +{} },
+);
 
-    my $maps = Catalyst::Utils::merge_hashes($self->{member} || {}, {
+has '_member_methods' => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    init_arg   => undef,
+    lazy_build => 1,
+);
+
+sub _build__member_methods {
+    my $self = shift;
+    return +{
         show    => { method => 'GET',    path => '' },
         update  => { method => 'PUT',    path => '' },
         destroy => { method => 'DELETE', path => '' },
         edit    => { method => 'GET' },
-    });
-    $self->setup_actions(_MEMBER => $maps);
+        delete  => { method => 'GET' },
+        %{ $self->_additional_member_methods },
+    };
+}
+
+sub _COLLECTION :ResourceChained ResourcePath CaptureArgs(0) {}
+sub _MEMBER     :ResourceChained ResourcePath CaptureArgs(1) {}
+
+sub BUILD {
+    my $self = shift;
+
+    $self->setup_actions(_COLLECTION => $self->_collection_methods);
+    $self->setup_actions(_MEMBER     => $self->_member_methods);
+}
+
+sub setup_actions {
+    my ($self, $map_to, $maps) = @_;
+    my $class = ref $self || $self;
+
+    while (my ($action, $map) = each %$maps) {
+        next unless my $code = $class->can($action);
+        $map = { method => uc $map } unless ref($map) eq 'HASH';
+
+        my @attrs = $self->_construct_action_attributes($map_to, $map);
+        unshift @attrs => @{ attributes::get($code) || [] };
+
+        attributes->import($class, $code, @attrs);
+    }
+}
+
+sub _construct_action_attributes {
+    my ($self, $chained_from, $map) = @_;
+
+    return (
+        'ResourceEndpoint',
+        'Args(0)',
+        "Chained('$chained_from')",
+        "Method('$map->{method}')",
+        exists $map->{path} ? "PathPart('$map->{path}')" : 'PathPart',
+    );
 }
 
 __PACKAGE__->meta->make_immutable;
