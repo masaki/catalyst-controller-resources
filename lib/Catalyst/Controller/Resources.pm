@@ -14,53 +14,75 @@ __PACKAGE__->config(
 
 with 'Catalyst::Controller::Resources::Role::ResourceAttributes';
 
-has '_additional_collection_methods' => (
-    is        => 'ro',
-    isa       => 'HashRef',
-    init_arg  => 'collection',
-    default   => sub { +{} },
+has '_default_collection_actions' => (
+    is       => 'ro',
+    isa      => 'HashRef',
+    init_arg => undef,
+    default  => sub {
+        +{
+            list   => { method => 'GET',  path => '' },
+            create => { method => 'POST', path => '' },
+            post   => { method => 'GET',  path => 'new' },
+        },
+    },
 );
 
-has '_collection_methods' => (
+has '_additional_collection_actions' => (
+    is       => 'ro',
+    isa      => 'HashRef',
+    init_arg => 'collection',
+    default  => sub { +{} },
+);
+
+has '_collection_actions' => (
     is         => 'ro',
     isa        => 'HashRef',
     init_arg   => undef,
     lazy_build => 1,
 );
 
-sub _build__collection_methods {
+sub _build__collection_actions {
     my $self = shift;
     return +{
-        list   => { method => 'GET',  path => '' },
-        create => { method => 'POST', path => '' },
-        post   => { method => 'GET',  path => 'new' },
-        %{ $self->_additional_collection_methods },
+        %{ $self->_default_collection_actions },
+        %{ $self->_additional_collection_actions },
     };
 }
 
-has '_additional_member_methods' => (
+has '_default_member_actions' => (
+    is       => 'ro',
+    isa      => 'HashRef',
+    init_arg => undef,
+    default  => sub {
+        +{
+            show    => { method => 'GET',    path => '' },
+            update  => { method => 'PUT',    path => '' },
+            destroy => { method => 'DELETE', path => '' },
+            edit    => { method => 'GET',    path => 'edit' },
+            delete  => { method => 'GET',    path => 'delete' },
+        },
+    },
+);
+
+has '_additional_member_actions' => (
     is       => 'ro',
     isa      => 'HashRef',
     init_arg => 'member',
     default  => sub { +{} },
 );
 
-has '_member_methods' => (
+has '_member_actions' => (
     is         => 'ro',
     isa        => 'HashRef',
     init_arg   => undef,
     lazy_build => 1,
 );
 
-sub _build__member_methods {
+sub _build__member_actions {
     my $self = shift;
     return +{
-        show    => { method => 'GET',    path => '' },
-        update  => { method => 'PUT',    path => '' },
-        destroy => { method => 'DELETE', path => '' },
-        edit    => { method => 'GET' },
-        delete  => { method => 'GET' },
-        %{ $self->_additional_member_methods },
+        %{ $self->_default_member_actions },
+        %{ $self->_additional_member_actions },
     };
 }
 
@@ -70,8 +92,8 @@ sub _MEMBER     :ResourceChained ResourcePath CaptureArgs(1) {}
 sub BUILD {
     my $self = shift;
 
-    $self->setup_actions(_COLLECTION => $self->_collection_methods);
-    $self->setup_actions(_MEMBER     => $self->_member_methods);
+    $self->setup_actions(_COLLECTION => $self->_collection_actions);
+    $self->setup_actions(_MEMBER     => $self->_member_actions);
 }
 
 sub setup_actions {
