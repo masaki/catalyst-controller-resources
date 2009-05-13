@@ -5,7 +5,11 @@ use Moose;
 use namespace::clean -except => ['meta'];
 use attributes ();
 
-BEGIN { extends 'Catalyst::Controller' }
+BEGIN { extends 'Catalyst::Controller::ActionRole' }
+
+unshift @{ __PACKAGE__->_action_role_prefix }, 'Catalyst::Controller::Resources::ActionRole::';
+
+__PACKAGE__->config(action_roles => ['MethodMatch']);
 
 sub BUILD {
     my $self = shift;
@@ -39,29 +43,6 @@ sub _construct_action_attributes {
         "Method('$map->{method}')",
         exists $map->{path} ? "PathPart('$map->{path}')" : 'PathPart',
     );
-}
-
-{
-    require Catalyst::Action;
-    package # hide from PAUSE
-        Catalyst::Action;
-    no warnings 'redefine';
-
-    *match = sub {
-        my ($self, $c) = @_;
-
-        # Method('...') attribute hack
-        if (exists $self->attributes->{Method}) {
-            my $request = uc($c->req->method) eq 'HEAD' ? 'GET' : uc($c->req->method);
-            my $method  = $self->attributes->{Method}->[0] || '';
-            return unless uc($method) eq $request;
-        }
-
-        return 1 unless exists $self->attributes->{Args};
-        my $args = $self->attributes->{Args}->[0];
-        return 1 unless defined($args) && length($args);
-        return scalar( @{ $c->req->args } ) == $args;
-    };
 }
 
 {
