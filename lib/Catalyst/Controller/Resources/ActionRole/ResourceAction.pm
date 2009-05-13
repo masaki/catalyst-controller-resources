@@ -1,5 +1,5 @@
 package # hide from PAUSE
-    Catalyst::Controller::Resources::ActionRole::MethodMatch;
+    Catalyst::Controller::Resources::ActionRole::ResourceAction;
 
 use Moose::Role;
 use namespace::clean -except => ['meta'];

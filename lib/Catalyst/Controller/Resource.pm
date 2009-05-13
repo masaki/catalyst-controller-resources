@@ -7,9 +7,9 @@ use attributes ();
 
 BEGIN { extends 'Catalyst::Controller::ActionRole' }
 
-unshift @{ __PACKAGE__->_action_role_prefix }, 'Catalyst::Controller::Resources::ActionRole::';
-
-__PACKAGE__->config(action_roles => ['MethodMatch']);
+__PACKAGE__->config(
+    action_roles => ['+Catalyst::Controller::Resources::ActionRole::ResourceAction'],
+);
 
 sub BUILD {
     my $self = shift;
