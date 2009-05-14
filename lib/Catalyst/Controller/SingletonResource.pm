@@ -92,9 +92,7 @@ In your controller:
 This base controller exports Catalyst action attributes to your controller,
 and setup singleton resource as B</account>.
 
-=head1 METHODS
-
-=head2 RESERVED SUBROUTINES (ACTIONS)
+=head1 RESERVED ACTIONS
 
 =over
 

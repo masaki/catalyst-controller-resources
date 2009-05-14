@@ -187,9 +187,7 @@ In your controller:
 This base controller exports Catalyst action attributes to your controller,
 and setup collection resource as B</books>.
 
-=head1 METHODS
-
-=head2 RESERVED SUBROUTINES (ACTIONS)
+=head1 RESERVED ACTIONS
 
 =over
 
@@ -220,16 +218,6 @@ called by B<GET /collection/new> request
 =item edit
 
 called by B<GET /member/{member_id}/edit> request
-
-=back
-
-=head2 INTERNAL METHODS
-
-=over
-
-=item setup_collection_actions
-
-=item setup_member_actions
 
 =back
 
