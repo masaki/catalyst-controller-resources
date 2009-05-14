@@ -4,17 +4,14 @@ use 5.008_001;
 use Moose;
 use namespace::clean -except => ['meta'];
 
-BEGIN { extends 'Catalyst::Controller::ActionRole' }
+BEGIN { extends 'Catalyst::Controller' }
 
 our $VERSION = '0.04';
-
-__PACKAGE__->config(
-    action_roles => ['+Catalyst::Controller::Resources::ActionRole::ResourceAction'],
-);
 
 with qw(
     Catalyst::Controller::Resources::Role::BuildActions
     Catalyst::Controller::Resources::Role::ParseAttributes
+    Catalyst::Controller::Resources::Role::ActionRole
 );
 
 has '+_default_collection_actions' => (

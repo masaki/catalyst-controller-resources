@@ -3,8 +3,9 @@ name 'Catalyst-Controller-Resources';
 all_from 'lib/Catalyst/Controller/Resources.pm';
 
 requires 'Catalyst::Runtime' => '5.80003';
-requires 'Catalyst::Controller::ActionRole' => '0.11'; # 0.10 is broken under catamoose
+#requires 'Catalyst::Controller::ActionRole' => '0.11'; # 0.10 is broken under catamoose
 requires 'Moose' => '0.78';
+requires 'Class::MOP' => '0.83';
 requires 'namespace::clean';
 
 feature 'Catalyst::Helper support',
