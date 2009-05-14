@@ -1,5 +1,10 @@
 Revision history for Perl extension Catalyst::Controller::Resources
 
+0.05
+        - now works under Catalyst 5.8
+        - depends on Moose
+        - updated POD (about Catalyst version)
+
 0.04    2008-10-30T11:31:40+09:00
         - can use with other controllers and attributes
         

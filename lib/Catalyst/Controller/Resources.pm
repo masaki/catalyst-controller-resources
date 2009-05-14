@@ -6,7 +6,7 @@ use namespace::clean -except => ['meta'];
 
 BEGIN { extends 'Catalyst::Controller' }
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 with qw(
     Catalyst::Controller::Resources::Role::BuildActions
