@@ -13,11 +13,11 @@ feature 'Catalyst::Helper support',
 
 tests 't/*.t';
 test_requires 'Test::More';
-test_requires 'Test::use::ok';
+test_requires 'Test::UseAllModules';
 test_requires 'HTTP::Request';
 author_tests 'xt';
 use_test_base;
 
-auto_include;
-auto_install;
+auto_set_repository;
+auto_include_deps;
 WriteAll;
