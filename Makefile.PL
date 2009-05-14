@@ -2,13 +2,14 @@ use inc::Module::Install;
 name 'Catalyst-Controller-Resources';
 all_from 'lib/Catalyst/Controller/Resources.pm';
 
-requires 'Catalyst::Runtime' => 5.70;
-requires 'Class::C3';
-requires 'List::Util';
+requires 'Catalyst::Runtime' => '5.80003';
+requires 'Catalyst::Controller::ActionRole' => '0.11'; # 0.10 is broken under catamoose
+requires 'Moose' => '0.78';
+requires 'namespace::clean';
 
 feature 'Catalyst::Helper support',
     -default          => 0,
-    'Catalyst::Devel' => '1.0';
+    'Catalyst::Devel' => '1.15';
 
 tests 't/*.t';
 test_requires 'Test::More';

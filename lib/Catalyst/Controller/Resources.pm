@@ -1,5 +1,6 @@
 package Catalyst::Controller::Resources;
 
+use 5.008_001;
 use Moose;
 use namespace::clean -except => ['meta'];
 
