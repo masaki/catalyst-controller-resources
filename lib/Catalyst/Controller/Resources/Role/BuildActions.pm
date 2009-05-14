@@ -84,14 +84,14 @@ sub _inject_action_attributes {
         my $path   = exists $config->{path} ? $config->{path} : $name;
         my $code   = $meta->get_method($name)->body;
 
-        my @attrs = (
-            @{ attributes::get($code) || [] },
-            "Chained('$chained')",
-            "PathPart('$path')",
-            'Args(0)',
-            'ResourceEndpoint',
-            "Method('$method')",
-        );
+        my $attrs = qq/
+            Chained('$chained')
+            PathPart('$path')
+            Args(0)
+            ResourceEndpoint
+            Method('$method')
+        /;
+        my @attrs = (@{ attributes::get($code) || [] }, split /\s+/, $attrs);
 
         attributes::->import($meta->name, $code, @attrs);
     }
