@@ -174,6 +174,11 @@ post.tt:
     </body>
   </html>
 
+=head1 CAUTION
+
+This version works under Catalyst 5.8 (catamoose).
+If you use this module with Catalyst 5.7, please check out version 0.04.
+
 =head1 DESCRIPTION
 
 This controller defines HTTP verb-oriented actions for collection resource,
