@@ -3,15 +3,22 @@ package Catalyst::Controller::SingletonResource;
 use Moose;
 use namespace::clean -except => ['meta'];
 
-BEGIN { extends 'Catalyst::Controller::Resources' }
+BEGIN { extends 'Catalyst::Controller::ActionRole' }
 
 require Catalyst::Controller::Resources;
 our $VERSION = $Catalyst::Controller::Resources::VERSION;
 
-with 'Catalyst::Controller::Resources::Role::ResourceAttributes';
+__PACKAGE__->config(
+    action_roles => ['+Catalyst::Controller::Resources::ActionRole::ResourceAction'],
+);
+
+with qw(
+    Catalyst::Controller::Resources::Role::BuildActions
+    Catalyst::Controller::Resources::Role::ParseAttributes
+);
 
 has '+_default_collection_actions' => (
-    default => sub {
+    default  => sub {
         +{
             create => { method => 'POST', path => '' },
             post   => { method => 'GET',  path => 'new' },
@@ -19,8 +26,20 @@ has '+_default_collection_actions' => (
     },
 );
 
-sub _COLLECTION :ResourceChained ResourcePath CaptureArgs(0) {}
-sub _MEMBER     :ResourceChained ResourcePath CaptureArgs(0) {}
+has '+_default_member_actions' => (
+    default  => sub {
+        +{
+            show    => { method => 'GET',    path => '' },
+            update  => { method => 'PUT',    path => '' },
+            destroy => { method => 'DELETE', path => '' },
+            edit    => { method => 'GET',    path => 'edit' },
+            delete  => { method => 'GET',    path => 'delete' },
+        },
+    },
+);
+
+sub _COLLECTION :ResourceChained ResourcePathPart CaptureArgs(0) {}
+sub _MEMBER     :ResourceChained ResourcePathPart CaptureArgs(0) {}
 
 __PACKAGE__->meta->make_immutable;
 
@@ -106,15 +125,9 @@ called by B<GET /resource/new> request
 
 called by B<GET /resource/edit> request
 
-=back
+=item delete
 
-=head2 INTERNAL METHODS
-
-=over
-
-=item setup_collection_actions
-
-=item setup_member_actions
+called by B<GET /resource/delete> request
 
 =back
 

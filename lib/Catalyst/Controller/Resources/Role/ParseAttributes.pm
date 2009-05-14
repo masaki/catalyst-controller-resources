@@ -1,5 +1,5 @@
 package # hide from PAUSE
-    Catalyst::Controller::Resources::Role::ResourceAttributes;
+    Catalyst::Controller::Resources::Role::ParseAttributes;
 
 use Moose::Role;
 use namespace::clean -except => ['meta'];
@@ -21,7 +21,7 @@ sub _parse_ResourceChained_attr {
     return Chained => $path;
 }
 
-sub _parse_ResourcePath_attr {
+sub _parse_ResourcePathPart_attr {
     my ($self, $c, $name, $value) = @_;
 
     my $path;

@@ -2,7 +2,6 @@ package Catalyst::Controller::Resources;
 
 use Moose;
 use namespace::clean -except => ['meta'];
-use attributes ();
 
 BEGIN { extends 'Catalyst::Controller::ActionRole' }
 
@@ -12,12 +11,12 @@ __PACKAGE__->config(
     action_roles => ['+Catalyst::Controller::Resources::ActionRole::ResourceAction'],
 );
 
-with 'Catalyst::Controller::Resources::Role::ResourceAttributes';
+with qw(
+    Catalyst::Controller::Resources::Role::BuildActions
+    Catalyst::Controller::Resources::Role::ParseAttributes
+);
 
-has '_default_collection_actions' => (
-    is       => 'ro',
-    isa      => 'HashRef',
-    init_arg => undef,
+has '+_default_collection_actions' => (
     default  => sub {
         +{
             list   => { method => 'GET',  path => '' },
@@ -27,32 +26,7 @@ has '_default_collection_actions' => (
     },
 );
 
-has '_additional_collection_actions' => (
-    is       => 'ro',
-    isa      => 'HashRef',
-    init_arg => 'collection',
-    default  => sub { +{} },
-);
-
-has '_collection_actions' => (
-    is         => 'ro',
-    isa        => 'HashRef',
-    init_arg   => undef,
-    lazy_build => 1,
-);
-
-sub _build__collection_actions {
-    my $self = shift;
-    return +{
-        %{ $self->_default_collection_actions },
-        %{ $self->_additional_collection_actions },
-    };
-}
-
-has '_default_member_actions' => (
-    is       => 'ro',
-    isa      => 'HashRef',
-    init_arg => undef,
+has '+_default_member_actions' => (
     default  => sub {
         +{
             show    => { method => 'GET',    path => '' },
@@ -64,64 +38,8 @@ has '_default_member_actions' => (
     },
 );
 
-has '_additional_member_actions' => (
-    is       => 'ro',
-    isa      => 'HashRef',
-    init_arg => 'member',
-    default  => sub { +{} },
-);
-
-has '_member_actions' => (
-    is         => 'ro',
-    isa        => 'HashRef',
-    init_arg   => undef,
-    lazy_build => 1,
-);
-
-sub _build__member_actions {
-    my $self = shift;
-    return +{
-        %{ $self->_default_member_actions },
-        %{ $self->_additional_member_actions },
-    };
-}
-
-sub _COLLECTION :ResourceChained ResourcePath CaptureArgs(0) {}
-sub _MEMBER     :ResourceChained ResourcePath CaptureArgs(1) {}
-
-sub BUILD {
-    my $self = shift;
-
-    $self->setup_actions(_COLLECTION => $self->_collection_actions);
-    $self->setup_actions(_MEMBER     => $self->_member_actions);
-}
-
-sub setup_actions {
-    my ($self, $map_to, $maps) = @_;
-    my $class = ref $self || $self;
-
-    while (my ($action, $map) = each %$maps) {
-        next unless my $code = $class->can($action);
-        $map = { method => uc $map } unless ref($map) eq 'HASH';
-
-        my @attrs = $self->_construct_action_attributes($map_to, $map);
-        unshift @attrs => @{ attributes::get($code) || [] };
-
-        attributes->import($class, $code, @attrs);
-    }
-}
-
-sub _construct_action_attributes {
-    my ($self, $chained_from, $map) = @_;
-
-    return (
-        'ResourceEndpoint',
-        'Args(0)',
-        "Chained('$chained_from')",
-        "Method('$map->{method}')",
-        exists $map->{path} ? "PathPart('$map->{path}')" : 'PathPart',
-    );
-}
+sub _COLLECTION :ResourceChained ResourcePathPart CaptureArgs(0) {}
+sub _MEMBER     :ResourceChained ResourcePathPart CaptureArgs(1) {}
 
 __PACKAGE__->meta->make_immutable;
 
