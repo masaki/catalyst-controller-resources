@@ -1,5 +1,9 @@
 Revision history for Perl extension Catalyst::Controller::Resources
 
+0.07
+        - works with ActionClass attribute
+        - updated dependencies
+
 0.06
         - add explicit version number in SingletonResource (PAUSE indexer reports failed)
         - no functional changes, no need to upgrade
