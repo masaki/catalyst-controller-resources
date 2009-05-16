@@ -1,4 +1,4 @@
-package TestApp::Controller::Pages;
+package TestApp::Resources::Controller::Users::Articles;
 
 use strict;
 use warnings;
@@ -13,5 +13,6 @@ sub show {}
 sub update {}
 sub destroy {}
 sub edit {}
+sub delete {}
 
 1;

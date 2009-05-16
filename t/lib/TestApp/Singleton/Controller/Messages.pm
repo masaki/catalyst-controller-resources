@@ -1,4 +1,4 @@
-package TestApp::Controller::Messages;
+package TestApp::Singleton::Controller::Messages;
 
 use strict;
 use warnings;
@@ -13,5 +13,6 @@ sub show {}
 sub update {}
 sub destroy {}
 sub edit {}
+sub delete {}
 
 1;

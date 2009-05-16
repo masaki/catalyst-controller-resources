@@ -1,4 +1,4 @@
-package TestApp::Controller::Root;
+package TestApp::WithActionClass::Controller::Root;
 
 use strict;
 use warnings;

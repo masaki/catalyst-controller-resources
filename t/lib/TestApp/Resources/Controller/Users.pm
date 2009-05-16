@@ -1,4 +1,4 @@
-package TestApp::Controller::Users;
+package TestApp::Resources::Controller::Users;
 
 use strict;
 use warnings;
@@ -16,6 +16,7 @@ sub show {}
 sub update {}
 sub destroy {}
 sub edit {}
+sub delete {}
 
 sub login {}
 sub feed {}

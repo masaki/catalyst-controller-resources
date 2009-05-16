@@ -1,4 +1,4 @@
-package TestApp::Controller::Account;
+package TestApp::Singleton::Controller::Account;
 
 use strict;
 use warnings;
@@ -10,5 +10,6 @@ sub show {}
 sub update {}
 sub destroy {}
 sub edit {}
+sub delete {}
 
 1;

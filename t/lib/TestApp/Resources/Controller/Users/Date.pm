@@ -1,4 +1,4 @@
-package TestApp::Controller::Users::Date;
+package TestApp::Resources::Controller::Users::Date;
 
 use strict;
 use warnings;
