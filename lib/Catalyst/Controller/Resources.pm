@@ -51,37 +51,37 @@ Catalyst::Controller::Resources - Catalyst Collection Resources Controller
 
   package MyApp::Controller::Articles;
   use base 'Catalyst::Controller::Resources';
-  
+
   # GET /articles
   sub list {
       my ($self, $c) = @_;
   }
-  
+
   # POST /articles
   sub create {
       my ($self, $c) = @_;
   }
-  
+
   # GET /articles/{article_id}
   sub show {
       my ($self, $c, $article_id) = @_;
   }
-  
+
   # PUT /articles/{article_id}
   sub update {
       my ($self, $c, $article_id) = @_;
   }
-  
+
   # DELETE /articles/{article_id}
   sub destroy {
       my ($self, $c, $article_id) = @_;
   }
-  
+
   # GET /articles/new
   sub post {
       my ($self, $c) = @_;
   }
-  
+
   # GET /articles/{article_id}/edit
   sub edit {
       my ($self, $c, $article_id) = @_;
@@ -91,44 +91,44 @@ Catalyst::Controller::Resources - Catalyst Collection Resources Controller
 
   package MyApp::Controller::Articles;
   use base 'Catalyst::Controller::Resources';
-  
+
   # ...
-  
+
   package MyApp::Controller::Comments;
   use base 'Catalyst::Controller::Resources';
-  
+
   __PACKAGE__->config(belongs_to => 'Articles');
-  
+
   # GET /articles/{article_id}/comments
   sub list {
       my ($self, $c, $article_id) = @_;
   }
-  
+
   # POST /articles/{article_id}/comments
   sub create {
       my ($self, $c, $article_id) = @_;
   }
-  
+
   # GET /articles/{article_id}/comments/{comment_id}
   sub show {
       my ($self, $c, $article_id, $comment_id) = @_;
   }
-  
+
   # PUT /articles/{article_id}/comments/{comment_id}
   sub update {
       my ($self, $c, $article_id, $comment_id) = @_;
   }
-  
+
   # DELETE /articles/{article_id}/comments/{comment_id}
   sub destroy {
       my ($self, $c, $article_id, $comment_id) = @_;
   }
-  
+
   # GET /articles/{article_id}/comments/new
   sub post {
       my ($self, $c, $article_id) = @_;
   }
-  
+
   # GET /articles/{article_id}/comments/{comment_id}/edit
   sub edit {
       my ($self, $c, $article_id, $comment_id) = @_;
@@ -145,13 +145,13 @@ In your controller:
       Catalyst::Controller::Resources
       Catalyst::Controller::RequestToken
   );
-  
+
   sub post :CreateToken {
       my ($self, $c) = @_;
       $c->stash->{template} = 'foo/post.tt';
       $c->forward($c->view('TT'));
   }
-  
+
   sub create :ValidateToken {
       my ($self, $c) = @_;
 

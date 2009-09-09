@@ -22,7 +22,7 @@ sub _parse_ResourceChained_attr {
 
     my $path = '/';
     if ($self->is_nested) {
-        $path .= $c->controller($self->_belongs_to)->action_namespace . '/_MEMBER';
+        $path .= $c->controller($self->_belongs_to)->action_namespace($c) . '/_MEMBER';
     }
 
     return Chained => $path;

@@ -47,32 +47,32 @@ Catalyst::Controller::SingletonResource - Catalyst Singleton Resource Controller
 
   package MyApp::Controller::Account;
   use base 'Catalyst::Controller::SingletonResource';
-  
+
   # POST /account
   sub create {
       my ($self, $c) = @_;
   }
-  
+
   # GET /account
   sub show {
       my ($self, $c) = @_;
   }
-  
+
   # PUT /account
   sub update {
       my ($self, $c) = @_;
   }
-  
+
   # DELETE /account
   sub destroy {
       my ($self, $c) = @_;
   }
-  
+
   # GET /account/new
   sub post {
       my ($self, $c) = @_;
   }
-  
+
   # GET /account/edit
   sub edit {
       my ($self, $c) = @_;
