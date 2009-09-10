@@ -6,7 +6,7 @@ use namespace::clean -except => ['meta'];
 
 BEGIN { extends 'Catalyst::Controller::ActionRole' }
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 __PACKAGE__->config(
     action_roles => [ '+Catalyst::Controller::Resources::ActionRole::ResourceAction' ],
