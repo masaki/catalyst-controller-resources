@@ -1,4 +1,4 @@
-package TestApp::Resources::Controller::Users::Date;
+package TestApp::PathPrefix::Controller::Users::Date;
 
 use strict;
 use warnings;

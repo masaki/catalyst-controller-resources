@@ -91,7 +91,9 @@ sub _inject_action_attributes {
             ResourceEndpoint
             Method('$method')
         /;
-        my @default_attrs = @{ $meta->get_method_attributes($code) || [] };
+        my @default_attrs = grep {
+            $_ !~ /^(?:Chained|Path|Part|(?:Capture)?Args|Resource|Method)/
+        } @{ $meta->get_method_attributes($code) || [] };
         if (@default_attrs) {
             unshift @attrs, @default_attrs;
         }

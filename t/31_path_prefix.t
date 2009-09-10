@@ -2,7 +2,7 @@ use strict;
 use lib 't/lib';
 use Test::More tests => 4;
 use HTTP::Request;
-use Catalyst::Test 'TestApp::Resources';
+use Catalyst::Test 'TestApp::PathPrefix';
 
 action_ok '/users/masaki';
 content_like '/users/masaki' => qr'users/show';

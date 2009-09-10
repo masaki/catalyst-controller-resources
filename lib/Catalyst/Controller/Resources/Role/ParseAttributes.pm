@@ -33,7 +33,7 @@ sub _parse_ResourcePathPart_attr {
 
     my $path;
     if ($self->is_nested and not $self->has_path_prefix) {
-        $path = [ split m!/! => $self->action_namespace ]->[-1];
+        $path = [ split m!/! => $self->action_namespace($c) ]->[-1];
     }
     else {
         $path = $self->path_prefix;
